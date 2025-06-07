@@ -1,28 +1,33 @@
 #!/bin/bash
 
-IMG_NAME=dxopal-builder:1
+IMG_NAME=dxopal-builder:2
 
 cmd_build_image() {
-  docker build -t $IMG_NAME .
+  docker build --progress plain -t $IMG_NAME .
 }
 
 cmd_compile() {
   local rbfile="$1"; shift
 
+  local temp_jsfile="${rbfile}.js"
+
   local cmd=""
-  cmd="${cmd}docker run --rm -it "
+  cmd="${cmd}docker run --rm -i "
   cmd="${cmd}  -v$(pwd):/tmp/work "
 
   # コンテナ外の DXOpal を使う場合
   # cmd="${cmd}  -v/path/to/dxopal:/opt/dxopal "
 
   cmd="${cmd}  ${IMG_NAME} "
-  cmd="${cmd}    opal --compile --no-opal --no-exit "
+  cmd="${cmd}    opal --compile --no-exit "
   cmd="${cmd}      --include /opt/dxopal/lib "
   cmd="${cmd}      --include . "
+  cmd="${cmd}      --output ${temp_jsfile} "
   cmd="${cmd}      $rbfile "
 
-  $cmd # 組み立てたコマンドを実行
+  $cmd 1>&2 # 組み立てたコマンドを実行
+
+  cat $temp_jsfile
 }
 
 cmd="$1"; shift
